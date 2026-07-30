@@ -4,4 +4,5 @@ The Hate Speech Recognition project leverages Natural Language Processing (NLP) 
 -This repository contains all the required end to end deployment files  using gcs s3 busket syncer
 # Gcloud cli
 https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe
+
 -Contains app file which has fastapi app configuration to create an user interface
