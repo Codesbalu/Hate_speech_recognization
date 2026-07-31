@@ -79,17 +79,6 @@ Run the app (if `app.py` implements a web app or CLI):
 python app.py
 ```
 
-Open Jupyter notebooks:
-```bash
-jupyter notebook notebook/
-```
-
-If a Dockerfile is provided, you can build and run a container:
-```bash
-docker build -t hate-speech-recog .
-docker run -it --rm -p 8000:8000 hate-speech-recog
-```
-(Inspect `Dockerfile` and `app.py` to pick the correct port and CMD.)
 
 ## Training pipeline (high-level)
 The repository includes pipeline components intended for a standard ML workflow:
@@ -109,6 +98,37 @@ Typical workflow (adjust to actual function/class names in the code):
 4. Train model and save artifacts under an artifacts directory.
 5. Evaluate the model locally using evaluation scripts.
 6. Push artifacts to cloud storage or model registry using `model_pusher` and `gcloud_syncer`.
+
+## Web app (app.py) — FastAPI
+
+The repository exposes a small FastAPI application in `app.py` that provides two main endpoints and a docs UI:
+
+- Framework: FastAPI + Uvicorn
+- Entry point imports:
+  - TrainPipeline from `hate.pipeline.train_pipeline`
+  - PredictionPipeline from `hate.pipeline.prediction_pipeline`
+  - CustomException from `hate.exception`
+  - APP_HOST and APP_PORT from `hate.constants`
+
+Behavior / endpoints
+- GET /  
+  - Redirects to the automatic API docs at /docs (Swagger UI).
+- GET /train  
+  - Triggers a pipeline run: constructs `TrainPipeline()` and calls `train_pipeline.run_pipeline()`.
+  - Response: 200 with "Training successful !!" on success, or a 500-style Response containing the exception message on failure.
+- POST /predict  
+  - Runs `PredictionPipeline()` and calls `obj.run_pipeline(text)` where `text` is provided as a request query parameter.
+  - Note: the endpoint signature is `async def predict_route(text)`, so FastAPI expects `text` as a required query parameter (e.g., /predict?text=...).
+  - Response: whatever `PredictionPipeline.run_pipeline` returns (e.g., prediction / label / scores). Exceptions are raised as `CustomException`.
+
+How to run the app
+- From the repository root (APP_HOST and APP_PORT are read from `hate.constants`):
+```bash
+# run via the module entry point
+python app.py
+
+# or use uvicorn directly (recommended for development with reload)
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
 Because some component files in the repository are present as pipeline placeholders, inspect each component module for the exact function and class names and adapt the commands accordingly.
 
@@ -153,18 +173,3 @@ This project is provided under the LICENSE in the repository root. Please review
 
 ## Contact / Authors
 See repository owner on GitHub: Codesbalu
-
----
-
-If you'd like, I can:
-- Draft a ready-to-commit README.md file and open a pull request with it.
-- Create a short example notebook that demonstrates training and inference using the pipeline files present.
-- Inspect specific files (e.g., `app.py`, `data_ingestion.py`) and extract exact usage examples to include in the README.
-```
--This repository contains all the required end to end deployment files  using gcs s3 busket syncer
-# Gcloud cli
-https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe
-
--Contains app file which has fastapi app configuration to create an user interface
-
-
